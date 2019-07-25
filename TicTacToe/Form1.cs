@@ -10,11 +10,15 @@ namespace TicTacToe
         X, O
     }
 
-    
+    public class Move
+    {
+        public int index { get; set; }
+        public int score { get; set; }
+    }
 
     public partial class Form1 : Form
     {
-        string[] tempboard = { "O", "", "X", "X", "", "X", "", "O", "O" };
+        string[] tempboard = { "", "X", "X", "", "O", "", "O", "", ""};
         string[] tempEmptyBoard = { "", "", "", "", "", "", "", "", "" };
         private List<Button> board;
         private List<int> availIndices;
@@ -33,6 +37,7 @@ namespace TicTacToe
         private Player currentPlayer;
         private int playerWin = 0;
         private int compWin = 0;
+        private int call = 0;
 
         public Form1()
         {
@@ -113,19 +118,40 @@ namespace TicTacToe
             updateIndices(Oindices, "O");
             if (isWinningCombo(Oindices))
             {
-                MessageBox.Show("Win");
-                playerWin++;
-                label1.Text = "Player Wins - " + playerWin.ToString();
-                clearButtons();
-                button10.Text = "Restart Game";
+                win(currentPlayer);
             }
             else
             {
                 currentPlayer = Player.X;
                 int bestMove = miniMax(flattenBoard(), currentPlayer);
+                Xindices.Add(bestMove);
+                board[bestMove].Text = currentPlayer.ToString();
+                board[bestMove].Enabled = false;
+                if (isWinningCombo(Xindices))
+                {
+                    win(currentPlayer);
+                }
             }
 
         }
+
+        private void win(Player p)
+        {
+            MessageBox.Show("Win ");
+            if (p == Player.O)
+            {
+                playerWin++;
+                label1.Text = "Player Wins - " + playerWin.ToString();
+            }
+            else
+            {
+                compWin++;
+                label2.Text = "Computer Wins - " + compWin.ToString();
+            }
+            clearButtons();
+            button10.Text = "Restart Game";
+        }
+
 
         private List<string> flattenBoard()
         {
@@ -160,20 +186,64 @@ namespace TicTacToe
         //Returns the index of the best move computed
         private int miniMax(List<string> newBoard, Player player)
         {
-            var newAvailButtons = findAvailIndices(newBoard);
+            call++;
+            var newAvailIndices = findAvailIndices(newBoard);
             if (isWinningCombo(Oindices)) return -10;
             else if (isWinningCombo(Xindices)) return 10;
-            else if (availIndices.Count == 0) return 0;
-            var AllMoves = new List<int>();
-            for (int i = 0; i < availIndices.Count; i++)
+            else if (newAvailIndices.Count == 0) return 0;
+            var AllMoves = new List<Move>();
+            for (int i = 0; i < newAvailIndices.Count; i++)
             {
-                var move = new List<Tuple<int,int>>();
-                move.Add(Tuple.Create(i,0));
-                newBoard[i] = currentPlayer.ToString();
-                
-            }
+                Move move = new Move();
+                move.index = newAvailIndices[i]; 
+                newBoard[newAvailIndices[i]] = player.ToString();
+                if (player == Player.X)
+                {
+                    Xindices.Add(newAvailIndices[i]);
+                    //currentPlayer = Player.O;
+                    var result = miniMax(newBoard, Player.O);
 
-            return 0;
+                    move.score = result; 
+                    Xindices.Remove(newAvailIndices[i]);
+                }
+                else
+                {
+                    Oindices.Add(newAvailIndices[i]);
+                    var result = miniMax(newBoard, Player.X);
+                    move.score = result;
+                    Oindices.Remove(newAvailIndices[i]);
+                }
+                newBoard[newAvailIndices[i]] = "";
+
+                AllMoves.Add(move);
+
+            }
+            var bestMove = -1;
+            if (player == Player.X)
+            {
+                var bestScore = Int32.MinValue;
+                for(int i = 0; i < AllMoves.Count; i++)
+                {
+                    if (AllMoves[i].score > bestScore)
+                    {
+                        bestScore = AllMoves[i].score;
+                        bestMove = AllMoves[i].index;
+                    }
+                }
+            }
+            else
+            {
+                var bestScore = Int32.MaxValue;
+                for(int i = 0; i < AllMoves.Count; i++)
+                {
+                    if(AllMoves[i].score < bestScore)
+                    {
+                        bestScore = AllMoves[i].score;
+                        bestMove = AllMoves[i].index;
+                    }
+                }
+            }
+            return bestMove;
         }
     }
 }
