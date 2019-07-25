@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -11,12 +10,14 @@ namespace TicTacToe
         X, O
     }
 
+    
+
     public partial class Form1 : Form
     {
         string[] tempboard = { "O", "", "X", "X", "", "X", "", "O", "O" };
         string[] tempEmptyBoard = { "", "", "", "", "", "", "", "", "" };
         private List<Button> board;
-        private List<Button> availButtons;
+        private List<int> availIndices;
         private List<int> Xindices;
         private List<int> Oindices;
         private List<List<int>> winningCombos = new List<List<int>> {
@@ -41,7 +42,7 @@ namespace TicTacToe
             Xindices = new List<int>();
             Oindices = new List<int>();
             showText();
-            findAvailButtons();
+            availIndices = findAvailIndices(flattenBoard());
         }
 
         //Will be removed when game is working correctly
@@ -89,12 +90,17 @@ namespace TicTacToe
             }
         }
 
-        private void findAvailButtons()
+        private List<int> findAvailIndices(List<string> newBoard)
         {
-            var avail = from button in board
-                        where button.Text == ""
-                        select button;
-            availButtons = avail.ToList();
+            List<int> availIndices = new List<int>();
+            for(int i = 0; i < 9; i++)
+            {
+                if(newBoard[i] == "")
+                {
+                    availIndices.Add(i);
+                }
+            }
+            return availIndices;
         }
 
         private void playerClick(object sender, EventArgs e)
@@ -103,7 +109,7 @@ namespace TicTacToe
             currentPlayer = Player.O;
             button.Text = currentPlayer.ToString();
             button.Enabled = false;
-            availButtons.Remove(button);
+            availIndices = findAvailIndices(flattenBoard());
             updateIndices(Oindices, "O");
             if (isWinningCombo(Oindices))
             {
@@ -116,9 +122,19 @@ namespace TicTacToe
             else
             {
                 currentPlayer = Player.X;
-                int bestMove = miniMax(board, currentPlayer, 0);
+                int bestMove = miniMax(flattenBoard(), currentPlayer);
             }
 
+        }
+
+        private List<string> flattenBoard()
+        {
+            List<string> flatBoard = new List<string>();
+            foreach(Button b in board)
+            {
+                flatBoard.Add(b.Text);
+            }
+            return flatBoard;
         }
 
         private void clearButtons()
@@ -142,15 +158,19 @@ namespace TicTacToe
 
 
         //Returns the index of the best move computed
-        private int miniMax(List<Button> newBoard, Player player, int score)
+        private int miniMax(List<string> newBoard, Player player)
         {
-            if (isWinningCombo(Oindices)) score = 10;
-            else if (isWinningCombo(Xindices)) score = 10;
-            else if (availButtons.Count == 0) score = 0;
-            var moves = new List<int>();
-            for (int avail = 0; avail < availButtons.Count; avail++)
+            var newAvailButtons = findAvailIndices(newBoard);
+            if (isWinningCombo(Oindices)) return -10;
+            else if (isWinningCombo(Xindices)) return 10;
+            else if (availIndices.Count == 0) return 0;
+            var AllMoves = new List<int>();
+            for (int i = 0; i < availIndices.Count; i++)
             {
-
+                var move = new List<Tuple<int,int>>();
+                move.Add(Tuple.Create(i,0));
+                newBoard[i] = currentPlayer.ToString();
+                
             }
 
             return 0;
