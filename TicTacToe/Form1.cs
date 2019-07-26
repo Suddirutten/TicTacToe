@@ -18,7 +18,7 @@ namespace TicTacToe
 
     public partial class Form1 : Form
     {
-        string[] tempboard = { "O", "X", "X", "X", "O", "O", "", "", ""};
+        string[] tempboard = { "O", "X", "X", "X", "O", "O", "O", "", "X"};
         string[] tempEmptyBoard = { "", "", "", "", "", "", "", "", "" };
         private List<Button> board;
         private List<int> availIndices;
@@ -123,13 +123,17 @@ namespace TicTacToe
             {
                 currentPlayer = Player.X;
                 int bestMove = miniMax(flattenBoard(), currentPlayer).index;
-                Xindices.Add(bestMove);
-                board[bestMove].Text = currentPlayer.ToString();
-                board[bestMove].Enabled = false;
-                if (isWinningCombo(Xindices))
+                if(bestMove > -1)
                 {
-                    win(currentPlayer);
+                    Xindices.Add(bestMove);
+                    board[bestMove].Text = currentPlayer.ToString();
+                    board[bestMove].Enabled = false;
+                    if (isWinningCombo(Xindices))
+                    {
+                        win(currentPlayer);
+                    }
                 }
+                
             }
             if(findAvailIndices(flattenBoard()).Count == 0 && !isWinningCombo(Oindices) && !isWinningCombo(Xindices))
             {
@@ -205,6 +209,7 @@ namespace TicTacToe
             }
             else if (newAvailIndices.Count == 0)
             {
+                m.index = -1;
                 m.score = 0;
                 return m;
             }
