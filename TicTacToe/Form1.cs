@@ -5,11 +5,13 @@ using System.Windows.Forms;
 
 namespace TicTacToe
 {
+    //Enum for which player is playing
     public enum Player
     {
         X, O
     }
 
+    //Class for a move, keeps track of index and score
     public class Move
     {
         public int index { get; set; }
@@ -18,8 +20,6 @@ namespace TicTacToe
 
     public partial class Form1 : Form
     {
-        string[] tempboard = { "O", "X", "X", "X", "O", "O", "O", "", "X"};
-        string[] tempEmptyBoard = { "", "", "", "", "", "", "", "", "" };
         private List<Button> board;
         private List<int> availIndices;
         private List<int> Xindices;
@@ -38,6 +38,7 @@ namespace TicTacToe
         private int playerWin = 0;
         private int compWin = 0;
 
+        //Initiates the indices and the board
         public Form1()
         {
             InitializeComponent();
@@ -45,31 +46,11 @@ namespace TicTacToe
                 button5, button6, button7, button8, button9};
             Xindices = new List<int>();
             Oindices = new List<int>();
-            showText();
-            availIndices = findAvailIndices(flattenBoard());
+            availIndices = Enumerable.Range(0, 9).ToList(); 
         }
 
-        //Will be removed when game is working correctly
-        private void showText()
-        {
-            for (int i = 0; i < 9; i++)
-            {
-                board[i].Text = tempboard[i];
-                if (tempboard[i] != "")
-                {
-                    board[i].Enabled = false;
-                }
-                if (tempboard[i] == "X")
-                {
-                    Xindices.Add(i);
-                }
-                if (tempboard[i] == "O")
-                {
-                    Oindices.Add(i);
-                }
-            }
-        }
-
+        //Method to check if there is any winning combo present in the indices
+        //Returns true/false
         private bool isWinningCombo(List<int> indices)
         {
             foreach (List<int> combo in winningCombos)
@@ -82,39 +63,28 @@ namespace TicTacToe
             return false;
         }
 
-
-        private void updateIndices(List<int> indices, string symbol)
-        {
-            for (int i = 0; i < 9; i++)
-            {
-                if (board[i].Text == symbol && !indices.Contains(i))
-                {
-                    indices.Add(i);
-                }
-            }
-        }
-
+        //Method to calculate the available indices for the minimax method
         private List<int> findAvailIndices(List<string> newBoard)
         {
-            List<int> availIndices = new List<int>();
+            List<int> aIndices = new List<int>();
             for(int i = 0; i < 9; i++)
             {
                 if(newBoard[i] == "")
                 {
-                    availIndices.Add(i);
+                    aIndices.Add(i);
                 }
             }
-            return availIndices;
+            return aIndices;
         }
 
+        //Method for when player has clicked button
         private void playerClick(object sender, EventArgs e)
         {
             var button = (Button)sender;
             currentPlayer = Player.O;
             button.Text = currentPlayer.ToString();
             button.Enabled = false;
-            availIndices = findAvailIndices(flattenBoard());
-            updateIndices(Oindices, "O");
+            Oindices.Add(board.IndexOf(button));
             if (isWinningCombo(Oindices))
             {
                 win(currentPlayer);
@@ -135,7 +105,8 @@ namespace TicTacToe
                 }
                 
             }
-            if(findAvailIndices(flattenBoard()).Count == 0 && !isWinningCombo(Oindices) && !isWinningCombo(Xindices))
+            availIndices = findAvailIndices(flattenBoard());
+            if (availIndices.Count == 0 && !isWinningCombo(Oindices) && !isWinningCombo(Xindices))
             {
                 MessageBox.Show("Tie!");
                 clearButtons();
@@ -144,6 +115,7 @@ namespace TicTacToe
 
         }
 
+        //Method for showing win-window and restarting the buttons
         private void win(Player p)
         {
             MessageBox.Show("Win ");
@@ -161,7 +133,7 @@ namespace TicTacToe
             button10.Text = "Restart Game";
         }
 
-
+        //Method for flattening the board from button to string
         private List<string> flattenBoard()
         {
             List<string> flatBoard = new List<string>();
@@ -172,6 +144,7 @@ namespace TicTacToe
             return flatBoard;
         }
 
+        //clears the buttons and the index lists
         private void clearButtons()
         {
             Xindices.Clear();
@@ -181,18 +154,16 @@ namespace TicTacToe
                 b.Text = "";
                 b.Enabled = true;
             }
-            tempboard = tempEmptyBoard;
         }
 
+        //Clears the buttons if player wishes to restart game
         private void restart_Click(object sender, EventArgs e)
         {
-            button10.Text = "Restart Game";
             clearButtons();
-            showText();
         }
 
 
-        //Returns the index of the best move computed
+        //Returns the index of the best move computed using the minimax method
         private Move miniMax(List<string> newBoard, Player player)
         {
             var newAvailIndices = findAvailIndices(newBoard);
